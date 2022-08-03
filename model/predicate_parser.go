@@ -35,7 +35,7 @@ var operandsByPredicate = map[string]OperandValidator{
 
 func IsOperandValid(input string) bool {
 	submatches := PREDICATE_REGEXP.FindStringSubmatch(input)
-	if len(submatches) != 3 {
+	if len(submatches) != 3 || submatches[2] == "" {
 		return false
 	}
 	if operandValidator, b := operandsByPredicate[strings.ToUpper(submatches[1])]; b {
@@ -66,7 +66,7 @@ func ToPredicates(input []string) ([]Predicate, error) {
 
 func ToPredicate(input string) (Predicate, error) {
 	submatches := PREDICATE_REGEXP.FindStringSubmatch(input)
-	if len(submatches) != 3 {
+	if len(submatches) != 3 || submatches[2] == "" {
 		return Predicate{}, ErrParsingFormatPredicate
 	}
 	return Predicate{
@@ -76,7 +76,7 @@ func ToPredicate(input string) (Predicate, error) {
 }
 
 func OperandHelp(input string) string {
-	if operand, b := operandsByPredicate[input]; b {
+	if operand, b := operandsByPredicate[strings.ToUpper(input)]; b {
 		return operand.Help()
 	}
 	return ""

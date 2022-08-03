@@ -1,5 +1,7 @@
 package model
 
+import "github.com/MrTimeout/spacetrack/utils"
+
 const (
 	BY_CCSDS_OMM_VERS      string = "CCSDS_OMM_VERS"
 	BY_COMMENT             string = "COMMENT"
@@ -92,6 +94,9 @@ type OrderBy struct {
 }
 
 func (o OrderBy) ToPath() string {
+	if !utils.CheckStringIsIn(ByPossibleValues, o.By) {
+		return ""
+	}
 	var orderByQuery = "/orderby/" + o.By
 
 	if sort := o.Sort.String(); sort != "" {

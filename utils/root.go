@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"strings"
 
 	"go.uber.org/zap"
 )
@@ -44,4 +45,14 @@ func CheckErr(err error) {
 	if err != nil {
 		Logger.Error("", zap.Error(err))
 	}
+}
+
+func CheckStringIsIn(arr []string, target string) bool {
+	target = strings.ToLower(target)
+	for _, a := range arr {
+		if strings.ToLower(a) == target {
+			return true
+		}
+	}
+	return false
 }

@@ -100,7 +100,7 @@ type OperandExactMatchValidator struct {
 }
 
 func (o OperandExactMatchValidator) Validate(input string) bool {
-	il := strings.ToLower(input)
+	il := strings.ToUpper(input)
 	for _, pv := range o.PossibleValues {
 		if il == pv {
 			return true
@@ -129,7 +129,7 @@ func (o OperandObjectIdValidator) Validate(input string) bool {
 
 func (o OperandObjectIdValidator) isYearValid(input string) bool {
 	if year, err := strconv.Atoi(input); err == nil {
-		return year <= time.Now().Year()
+		return year <= time.Now().Year() && year >= 1957
 	}
 	return false
 }
