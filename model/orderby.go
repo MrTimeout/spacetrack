@@ -94,7 +94,7 @@ type OrderBy struct {
 }
 
 func (o OrderBy) ToPath() string {
-	if !utils.CheckStringIsIn(ByPossibleValues, o.By) {
+	if !utils.CheckStringsIsIn(ByPossibleValues, o.By) {
 		return ""
 	}
 	var orderByQuery = "/orderby/" + o.By

@@ -107,21 +107,21 @@ func init() {
 	gpCmd.Flags().StringArrayVar(&predicates, "filter", []string{}, "Filter response by all the fields allowed in the response. Default is none")
 	gpCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Just build the path and prompt it to the console")
 
-	utils.CheckErr(gpCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = gpCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.FormatValues, cobra.ShellCompDirectiveDefault
-	}))
+	})
 
-	utils.CheckErr(gpCmd.RegisterFlagCompletionFunc("sort", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = gpCmd.RegisterFlagCompletionFunc("sort", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.SortValues, cobra.ShellCompDirectiveDefault
-	}))
+	})
 
-	utils.CheckErr(gpCmd.RegisterFlagCompletionFunc("orderby", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = gpCmd.RegisterFlagCompletionFunc("orderby", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.ByPossibleValues, cobra.ShellCompDirectiveDefault
-	}))
+	})
 
-	utils.CheckErr(gpCmd.RegisterFlagCompletionFunc("filter", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = gpCmd.RegisterFlagCompletionFunc("filter", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.PredicatePossibleValues, cobra.ShellCompDirectiveDefault
-	}))
+	})
 
 	rootCmd.AddCommand(gpCmd)
 }

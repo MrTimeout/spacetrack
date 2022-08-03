@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,19 +41,6 @@ var loggerLevelTests = []struct {
 	},
 }
 
-func createTmpFile(t *testing.T) string {
-	f, err := os.CreateTemp(".", "zaploggerfile")
-	if err != nil {
-		t.Error(err)
-	}
-
-	t.Cleanup(func() {
-		os.Remove(f.Name())
-	})
-
-	return f.Name()
-}
-
 func TestInitLogger(t *testing.T) {
 	t.Run("zap logger when console is on", func(t *testing.T) {
 		InitLogger("", LoggerLevel{value: "info"}, true)
@@ -67,7 +53,7 @@ func TestInitLogger(t *testing.T) {
 	})
 
 	t.Run("zap logger when file exists", func(t *testing.T) {
-		InitLogger(createTmpFile(t), LoggerLevel{value: "info"}, false)
+		InitLogger(createTmpWithPerm(t, 0666).Name(), LoggerLevel{value: "info"}, false)
 		assert.NotNil(t, Logger)
 	})
 }
