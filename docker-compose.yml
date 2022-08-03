@@ -1,0 +1,26 @@
+version: '3.9'
+services:
+  spacetrack_client:
+    image: spacetrack:latest
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    secrets:
+      - source: spacetrack_secret
+        uid: "10001"
+        gid: "10001"
+        mode: 440
+    user: spacetrack-client
+    volumes:
+      - spacetrack-workdir:/tmp:rw
+    configs:
+      - source: spacetrack_config
+        target: /home/spacetrack-client/.spacetrack.yaml
+configs:
+  spacetrack_config:
+    external: true
+secrets:
+  spacetrack_secret:
+    external: true
+volumes:
+  spacetrack-workdir:

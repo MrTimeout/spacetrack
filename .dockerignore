@@ -1,0 +1,9 @@
+*.md
+LICENSE
+.gitignore
+bin
+.vscode
+resources
+Makefile
+.golangci.yml
+.pre-commit-config.yaml
