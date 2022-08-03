@@ -26,10 +26,7 @@ jobs:
       run: CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-w -s" ./...
 
     - name: Test
-      run: go test -v ./... | go-junit-report -set-exit-code > report.xml
+      run: go test -race -covermode=atomic -coverprofile=coverage.out
       
-    - name: Test Summary
-      uses: test-summary/action@v1
-      with:
-        paths: report.xml
-      if: always()
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
