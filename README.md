@@ -1,4 +1,5 @@
 # Space track script
+[![codecov](https://codecov.io/gh/MrTimeout/spacetrack/branch/master/graph/badge.svg?token=FP09KOGVN6)](https://codecov.io/gh/MrTimeout/spacetrack)
 
 This script is used to fetch data about man-made earth-orbiting object tracked by [www.space-track.org](https://www.space-track.org).
 
