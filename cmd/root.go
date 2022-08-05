@@ -69,7 +69,7 @@ It can be used in an interval being limited by the requests allowed by the servi
 			},
 		}.BuildQuery()
 
-		rsp, err := client.GetSpaceClientInstance().FetchData(path)
+		rsp, err := client.FetchData(path, true)
 		if err != nil {
 			cmd.PrintErrln(err)
 			return

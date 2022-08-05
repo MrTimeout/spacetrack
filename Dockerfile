@@ -34,35 +34,9 @@ CMD [\
   "--work-dir", "/tmp", \
   "--limit", "5", \
   "--skip", "2", \
-  "--format", "xml", \
+  "--format", "json", \
   "--filter", "decay_date<>null-val", \
   "--filter", "epoch<now-30", \
   "--orderby", "norad_cat_id", \
   "--sort", "asc"\
-]
-
-FROM scratch as pro
-
-COPY --from=base /usr/share/zoneinfo/ /usr/share/zoneinfo/
-COPY --from=base /etc/passwd /etc/passwd
-COPY --from=base /etc/group /etc/group
-COPY --from=base /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-
-COPY --from=base /tmp /tmp
-COPY --from=base /go/bin/spacetrack /go/bin/spacetrack
-
-USER spacetrack-client:spacetrack-client
-
-CMD [\
-  "/go/bin/spacetrack", "gp", "--log-level", "debug", \
-  "--log-file", "/tmp/spacetrack.json", \
-  "--config", "~/.spacetrack.yaml", \
-  "--work-dir", "/tmp", \
-  "--limit", "5", \
-  "--skip", "2", \
-  "--format", "xml", \
-  "--filter", "decay_date<>null-val", \
-  "--filter", "epoch<now-30", \
-  "--orderby", "norad_cat_id", \
-  "--sort", "asc"\
-]
+  ]

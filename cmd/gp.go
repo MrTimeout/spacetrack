@@ -43,48 +43,21 @@ We can limit, order and sort asceding or descending by any field present in the 
 response by a lot of fields.
 	`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		for _, predicate := range predicates {
-			if !model.IsOperandValid(predicate) {
-				if help := model.OperandHelp(predicate); help != "" {
-					cmd.Println(help)
-				}
-				return fmt.Errorf("trying to parse predicate argument: %s", predicate)
-			}
-		}
-		return nil
+		return checkPredicates()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		now := time.Now()
 		defer func() {
-			utils.Logger.Info("Time consumed from start of the application", zap.Duration("duration", time.Since(now)))
+			utils.Logger.Info("time consumed from start of the application", zap.Duration("duration", time.Since(now)))
 		}()
 
-		p, err := model.ToPredicates(predicates)
+		query, err := buildQuery()
 		if err != nil {
-			cmd.PrintErrln(err.Error())
-			return
+			cmd.PrintErrln(err)
 		}
 
-		query := client.SpaceRequest{
-			Limit:           limit,
-			OrderBy:         orderBy,
-			Format:          format,
-			ShowEmptyResult: true,
-			Predicates:      p,
-		}.BuildQuery()
-
-		if dryRun {
-			cmd.Println("URL: ", query)
-		} else {
-			rsp, err := client.GetSpaceClientInstance().FetchData(query)
-			if err != nil {
-				cmd.PrintErrln(err)
-				return
-			}
-
-			if err = data.Persist(workDir, rsp); err != nil {
-				cmd.PrintErrln(err)
-			}
+		if err = executeQuery(query); err != nil {
+			cmd.PrintErrln(err)
 		}
 	},
 	Example: `
@@ -124,4 +97,44 @@ func init() {
 	})
 
 	rootCmd.AddCommand(gpCmd)
+}
+
+func checkPredicates() error {
+	for _, predicate := range predicates {
+		if !model.IsOperandValid(predicate) {
+			return fmt.Errorf("trying to parse predicate argument %s %s", predicate, model.OperandHelp(predicate))
+		}
+	}
+	return nil
+}
+
+func buildQuery() (string, error) {
+	p, err := model.ToPredicates(predicates)
+	if err != nil {
+		return "", err
+	}
+
+	return client.SpaceRequest{
+		Limit:           limit,
+		OrderBy:         orderBy,
+		Format:          format,
+		ShowEmptyResult: true,
+		Predicates:      p,
+	}.BuildQuery(), nil
+}
+
+func executeQuery(query string) error {
+	if dryRun {
+		utils.Logger.Info("executing dry run", zap.String("query", query))
+	} else {
+		rsp, err := client.FetchData(query, true)
+		if err != nil {
+			return err
+		}
+
+		if err = data.Persist(workDir, rsp); err != nil {
+			return err
+		}
+	}
+	return nil
 }
