@@ -1,0 +1,15 @@
+auth:
+    identity: identity
+    password: password
+interval: 1h
+logger:
+    console_appender:
+        date_format: rfc3339
+        level: debug
+    file_appenders:
+        - date_format: rfc3339
+          file: /tmp/spacetrack.json
+          level: debug
+    prod: false
+secret_file: ./secret-file
+work_dir: /tmp/spacetrack

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// ErrMarshalling error that is throw when marshalling DumMarhsaller
 var ErrMarshalling = errors.New("utils/root_test: DumMarshaller can't marshal")
 
 //DumbMarshaller interface Marshaller
@@ -15,6 +16,7 @@ type DumbMarshaller struct {
 	Value string `json:"value"`
 }
 
+// MarshalJSON is a dumb method that always return an error when marshalling
 func (d DumbMarshaller) MarshalJSON() ([]byte, error) {
 	return nil, ErrMarshalling
 }
@@ -37,6 +39,7 @@ func createTmpWithPerm(t *testing.T, mod os.FileMode) *os.File {
 }
 
 func TestMarshalIntoFile(t *testing.T) {
+	Configure(Logger{})
 	t.Run("marshal a nil value", func(t *testing.T) {
 		got := MarshalIntoFile(DumbMarshaller{Value: "some value"}, "")
 		want := ErrMarshalling.Error()

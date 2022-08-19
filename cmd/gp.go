@@ -35,32 +35,34 @@ var (
 	dryRun     bool
 )
 
-var gpCmd = &cobra.Command{
-	Use:   "gp",
-	Short: "Command which refers to the Request class GP or General Perturbations",
-	Long: `Command which refers to the Request class GP or General Perturbations. We can fetch all the data from the satellite catalog and filter it.
+// NewGpCommand is the command for operations over spacetrack to fetch data
+func NewGpCommand() *cobra.Command {
+	var gpCmd = &cobra.Command{
+		Use:   "gp",
+		Short: "Command which refers to the Request class GP or General Perturbations",
+		Long: `Command which refers to the Request class GP or General Perturbations. We can fetch all the data from the satellite catalog and filter it.
 We can limit, order and sort asceding or descending by any field present in the response. We can also format the response to 4 different ones and filter
 response by a lot of fields.
 	`,
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return checkPredicates()
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		now := time.Now()
-		defer func() {
-			utils.Logger.Info("time consumed from start of the application", zap.Duration("duration", time.Since(now)))
-		}()
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return checkPredicates()
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			now := time.Now()
+			defer func() {
+				utils.Info("time consumed from start of the application", zap.Duration("duration", time.Since(now)))
+			}()
 
-		query, err := buildQuery()
-		if err != nil {
-			cmd.PrintErrln(err)
-		}
+			query, err := buildQuery()
+			if err != nil {
+				utils.Error("buildQuery something bad occurs", zap.Error(err))
+			}
 
-		if err = executeQuery(query); err != nil {
-			cmd.PrintErrln(err)
-		}
-	},
-	Example: `
+			if err = executeQuery(query); err != nil {
+				utils.Error("executeQuery something bad occurs", zap.Error(err))
+			}
+		},
+		Example: `
 	spacetrack gp --dry-run --format json --limit 10 --orderby norad_cat_id --sort asc
 
 	spacetrack gp --format json --limit 10 --orderby norad_cat_id --sort desc --filter "decay_date<>null-val" --filter "epoch<now-30"
@@ -69,9 +71,8 @@ response by a lot of fields.
 
 	spacetrack gp --format xml --log-level debug --log-file /var/log/spacetrack.log --work-dir /tmp/my/spacetrack
 	`,
-}
+	}
 
-func init() {
 	gpCmd.Flags().Var(&format, "format", "Formatting output of the response. Possible values are html, json, csv, xml")
 	gpCmd.Flags().Var(&orderBy.Sort, "sort", "Sort response Ascending or Descending. By default, it is asc")
 	gpCmd.Flags().IntVar(&limit.Max, "limit", -1, "Limitting output to a restrictive number of results")
@@ -80,23 +81,27 @@ func init() {
 	gpCmd.Flags().StringArrayVar(&predicates, "filter", []string{}, "Filter response by all the fields allowed in the response. Default is none")
 	gpCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Just build the path and prompt it to the console")
 
-	_ = gpCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	// nolint:errcheck
+	gpCmd.RegisterFlagCompletionFunc("format", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.FormatValues, cobra.ShellCompDirectiveDefault
 	})
 
-	_ = gpCmd.RegisterFlagCompletionFunc("sort", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	// nolint:errcheck
+	gpCmd.RegisterFlagCompletionFunc("sort", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.SortValues, cobra.ShellCompDirectiveDefault
 	})
 
-	_ = gpCmd.RegisterFlagCompletionFunc("orderby", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	// nolint:errcheck
+	gpCmd.RegisterFlagCompletionFunc("orderby", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.ByPossibleValues, cobra.ShellCompDirectiveDefault
 	})
 
-	_ = gpCmd.RegisterFlagCompletionFunc("filter", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	// nolint:errcheck
+	gpCmd.RegisterFlagCompletionFunc("filter", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return model.PredicatePossibleValues, cobra.ShellCompDirectiveDefault
 	})
 
-	rootCmd.AddCommand(gpCmd)
+	return gpCmd
 }
 
 func checkPredicates() error {
@@ -117,7 +122,7 @@ func buildQuery() (string, error) {
 	return client.SpaceRequest{
 		Limit:           limit,
 		OrderBy:         orderBy,
-		Format:          format,
+		Format:          "json",
 		ShowEmptyResult: true,
 		Predicates:      p,
 	}.BuildQuery(), nil
@@ -125,14 +130,14 @@ func buildQuery() (string, error) {
 
 func executeQuery(query string) error {
 	if dryRun {
-		utils.Logger.Info("executing dry run", zap.String("query", query))
+		utils.Info("executing dry run", zap.String("query", query))
 	} else {
-		rsp, err := client.FetchData(query, true)
+		rsp, err := client.FetchData(&config.Auth, query, true)
 		if err != nil {
 			return err
 		}
 
-		if err = data.Persist(workDir, rsp); err != nil {
+		if err = data.Persist(config.WorkDir, rsp); err != nil {
 			return err
 		}
 	}

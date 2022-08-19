@@ -36,6 +36,7 @@ const (
 	OrderBy RequestPredicate = "orderby"
 )
 
+// SpaceRequest is used to hold all the information needed to build the query to fetch SpaceTrack
 type SpaceRequest struct {
 	Predicates      []model.Predicate
 	Format          model.Format
@@ -44,6 +45,7 @@ type SpaceRequest struct {
 	ShowEmptyResult bool
 }
 
+// BuildQuery is used to build the query of Spacetrack
 func (s SpaceRequest) BuildQuery() string {
 	var pathResult string
 	m := []model.SpaceToPath{s.OrderBy, s.Limit, s.Format}
@@ -64,6 +66,7 @@ func (s SpaceRequest) BuildQuery() string {
 	return pathResult
 }
 
+// SpaceOrbitalObj is used to persist all the information in format xml or json
 type SpaceOrbitalObj struct {
 	XMLName            xml.Name `xml:"row"`
 	CcsdsOmmVers       string   `json:"CCSDS_OMM_VERS" xml:"CCSDS_OMM_VERS"`

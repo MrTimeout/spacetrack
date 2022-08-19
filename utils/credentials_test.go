@@ -63,7 +63,7 @@ func TestReadOnlyFilePassphrase(t *testing.T) {
 
 	t.Run("read only file passphrase with passphrase length different than 32", func(t *testing.T) {
 		f := createTmpWithPerm(t, 0666)
-		if _, err := f.Write([]byte("random data")); err != nil {
+		if _, err := f.Write(Encode([]byte("random data"))); err != nil {
 			t.Fatal(err)
 		}
 
@@ -74,7 +74,7 @@ func TestReadOnlyFilePassphrase(t *testing.T) {
 
 	t.Run("read only file passphrase correctly", func(t *testing.T) {
 		f := createTmpWithPerm(t, 0666)
-		if _, err := f.Write([]byte(strings.Repeat("a", 32))); err != nil {
+		if _, err := f.Write(Encode([]byte(strings.Repeat("a", 32)))); err != nil {
 			t.Fatal(err)
 		}
 
