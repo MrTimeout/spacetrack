@@ -109,7 +109,6 @@ func postAuth(sta *utils.SpaceTrackAuth) ResponseHandler {
 			return err
 		}
 
-		// TODO: when requesting login endpoint, they send status ok and an error...
 		if r.StatusCode != http.StatusOK {
 			utils.Warn("status code differ from usual successful code 200",
 				zap.Int("status", r.StatusCode),
