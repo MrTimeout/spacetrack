@@ -13,18 +13,18 @@ import (
 func MarshalIntoFile(input any, file string) error {
 	data, err := json.Marshal(input)
 	if err != nil {
-		Logger.Warn("marshalling cookies", zap.Error(err))
+		Warn("marshalling cookies", zap.Error(err))
 		return err
 	}
 
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		Logger.Warn("opening/creating the file", zap.String("file", file), zap.Error(err))
+		Warn("opening/creating the file", zap.String("file", file), zap.Error(err))
 		return err
 	}
 
 	if _, err := f.Write(data); err != nil {
-		Logger.Warn("writing to the file", zap.String("file", file), zap.Error(err))
+		Warn("writing to the file", zap.String("file", file), zap.Error(err))
 		return err
 	}
 
