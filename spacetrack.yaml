@@ -11,5 +11,4 @@ logger:
           file: /tmp/spacetrack.json
           level: debug
     prod: false
-secret_file: ./secret-file
 work_dir: /tmp/spacetrack

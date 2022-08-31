@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MrTimeout/spacetrack/utils"
+	l "github.com/MrTimeout/spacetrack/utils"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,8 +29,12 @@ func createTmpWithPerm(t *testing.T, mod os.FileMode) *os.File {
 	return f
 }
 
+func TestMain(m *testing.M) {
+	l.Configure(l.Logger{})
+	os.Exit(m.Run())
+}
+
 func TestAuth(t *testing.T) {
-	utils.Configure(utils.Logger{})
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost && r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
 			if err := r.ParseForm(); err == nil && r.FormValue("identity") == "xxx" && r.FormValue("password") == "yyy" {
@@ -45,17 +49,17 @@ func TestAuth(t *testing.T) {
 	}))
 
 	t.Run("credentials fail", func(t *testing.T) {
-		s := utils.SpaceTrackAuth{
+		s := l.SpaceTrackAuth{
 			Identity: "incorrect",
 			Password: "password",
 			Secret:   "keysizeisnotcorrect",
 		}
 
-		assert.ErrorIs(t, utils.ErrIncorrectSecret, auth(&s, ts.URL, postAuth))
+		assert.ErrorIs(t, l.ErrIncorrectSecret, auth(&s, ts.URL, postAuth))
 	})
 
 	t.Run("auth is not needed because cookie is still useful", func(t *testing.T) {
-		s := utils.SpaceTrackAuth{
+		s := l.SpaceTrackAuth{
 			Cookie: &http.Cookie{Name: "cookie", Value: "cookie-val", Expires: time.Now().Add(time.Hour)},
 		}
 
@@ -63,7 +67,7 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("request to server fails due to incorrect credentials", func(t *testing.T) {
-		s := utils.SpaceTrackAuth{
+		s := l.SpaceTrackAuth{
 			Identity: "xxxx",
 			Password: "yyyy",
 		}
@@ -76,7 +80,7 @@ func TestAuth(t *testing.T) {
 		previousViperFile := viper.ConfigFileUsed()
 		viper.SetConfigFile(f.Name())
 		t.Cleanup(func() { viper.SetConfigFile(previousViperFile) })
-		s := utils.SpaceTrackAuth{
+		s := l.SpaceTrackAuth{
 			Identity: "xxx",
 			Password: "yyy",
 		}
@@ -90,7 +94,7 @@ func TestAuth(t *testing.T) {
 		viper.SetConfigFile(f.Name())
 		t.Cleanup(func() { viper.SetConfigFile(previousViperFile) })
 
-		s := utils.SpaceTrackAuth{
+		s := l.SpaceTrackAuth{
 			Identity: "xxx",
 			Password: "yyy",
 		}

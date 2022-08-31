@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MrTimeout/spacetrack/utils"
+	l "github.com/MrTimeout/spacetrack/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -105,20 +105,30 @@ func TestPostAuth(t *testing.T) {
 }
 
 func TestFetchData(t *testing.T) {
-	utils.Configure(utils.Logger{})
-	sta := utils.SpaceTrackAuth{
-		Identity: "identity",
-		Password: "password",
-		Cookie: &http.Cookie{
-			Name:    "chocolatechip",
-			Value:   "chocolatechip=u4cqq2pma6k6kjhedvt6pp3es1bfmndh",
-			Expires: time.Now().Add(time.Hour),
-		},
-	}
-
 	t.Run("invalid characters when passing one that is not allowed", func(t *testing.T) {
+		sta := l.SpaceTrackAuth{
+			Identity: "identity",
+			Password: "password",
+			Cookie: &http.Cookie{
+				Name:    "chocolatechip",
+				Value:   "chocolatechip=u4cqq2pma6k6kjhedvt6pp3es1bfmndh",
+				Expires: time.Now().Add(time.Hour),
+			},
+		}
 		_, got := FetchData(&sta, string([]byte{0x01, 0x02, 0x03, 0x04, 0x05}), true)
 
 		assert.ErrorContains(t, got, "invalid control character in URL")
+	})
+
+	t.Run("auth fails when fetching data", func(t *testing.T) {
+		s := l.SpaceTrackAuth{
+			Identity: "incorrect",
+			Password: "password",
+			Secret:   "keysizeisnotcorrect",
+		}
+
+		_, gotErr := FetchData(&s, "path", false)
+
+		assert.ErrorIs(t, gotErr, l.ErrIncorrectSecret)
 	})
 }

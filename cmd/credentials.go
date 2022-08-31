@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/MrTimeout/spacetrack/utils"
+	l "github.com/MrTimeout/spacetrack/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/sethvargo/go-password/password"
 	"github.com/spf13/cobra"
@@ -64,12 +64,12 @@ func NewCredentialsCmd() *cobra.Command {
 
 func checkCredentialsErr(cmd *cobra.Command, args []string) error {
 	var err error
-	utils.Debug("checking identity of the user")
+	l.Debug("checking identity of the user")
 	if config.Auth.Identity == "" {
 		return ErrCredentialsIdentity
 	}
 
-	utils.Debug("checking password of the user")
+	l.Debug("checking password of the user")
 	if config.Auth.Password == "" {
 		if config.Auth.Password, err = promptForSensibleData("Password", passwordCheck); err != nil {
 			return err
@@ -80,11 +80,11 @@ func checkCredentialsErr(cmd *cobra.Command, args []string) error {
 		if passphrase, err = promptForSensibleData("Passphrase", passphraseCheck); err != nil {
 			return err
 		}
-		utils.Info("using the already passed passphrase as a parameter")
+		l.Info("using the already passed passphrase as a parameter")
 	}
 
 	if passphrase == "" && autoPassphrase {
-		utils.Info("generating a passphrase on demand")
+		l.Info("generating a passphrase on demand")
 		if passphrase, err = password.Generate(32, 10, 10, true, false); err != nil {
 			return err
 		}
@@ -95,34 +95,34 @@ func checkCredentialsErr(cmd *cobra.Command, args []string) error {
 
 func setupCredentials(cmd *cobra.Command, args []string) {
 	passphraseBytes := []byte(passphrase)
-	identity, err := utils.Encrypt([]byte(config.Auth.Identity), passphraseBytes)
+	identity, err := l.Encrypt([]byte(config.Auth.Identity), passphraseBytes)
 	if err != nil {
-		utils.Error("trying to generate the identity encrypted value", zap.Error(err))
+		l.Error("trying to generate the identity encrypted value", zap.Error(err))
 		return
 	}
 
-	password, err := utils.Encrypt([]byte(config.Auth.Password), passphraseBytes)
+	password, err := l.Encrypt([]byte(config.Auth.Password), passphraseBytes)
 	if err != nil {
-		utils.Error("trying to generate the password encrypted value", zap.Error(err))
+		l.Error("trying to generate the password encrypted value", zap.Error(err))
 		return
 	}
 
 	viper.Set("auth.identity", string(identity))
 	viper.Set("auth.password", string(password))
 	if err := viper.WriteConfig(); err != nil {
-		utils.Error("writting config to file",
+		l.Error("writting config to file",
 			zap.String("config_file", viper.GetViper().ConfigFileUsed()), zap.Error(err))
 		return
 	}
 
-	passphraseEncoded := utils.Encode(passphraseBytes)
-	utils.Info("passphrase used to encrypt fields was built successfully", zap.String("passphrase", string(passphraseEncoded)))
+	passphraseEncoded := l.Encode(passphraseBytes)
+	l.Info("passphrase used to encrypt fields was built successfully", zap.String("passphrase", string(passphraseEncoded)))
 	if autoPassphrase && strings.TrimSpace(config.SecretFile) != "" {
-		if err := utils.WritePassphraseToFile(config.SecretFile, passphraseEncoded); err != nil {
-			utils.Error("write passphrase to secret file was not successful", zap.Error(err))
+		if err := l.WritePassphraseToFile(config.SecretFile, passphraseEncoded); err != nil {
+			l.Error("write passphrase to secret file was not successful", zap.Error(err))
 			return
 		}
-		utils.Info("passphrase successfully persisted into the secret file", zap.String("secret-file", config.SecretFile))
+		l.Info("passphrase successfully persisted into the secret file", zap.String("secret-file", config.SecretFile))
 	}
 }
 

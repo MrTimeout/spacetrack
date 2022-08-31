@@ -3,7 +3,9 @@ module github.com/MrTimeout/spacetrack
 go 1.18
 
 require (
+	github.com/DrGrimshaw/gohtml v0.0.0-20211105122738-1231c86d1d16
 	github.com/fsnotify/fsnotify v1.5.4
+	github.com/gocarina/gocsv v0.0.0-20220823132111-71f3a5cb2654
 	github.com/manifoldco/promptui v0.9.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/spf13/cobra v1.5.0

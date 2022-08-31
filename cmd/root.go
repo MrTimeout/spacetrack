@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,10 +21,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MrTimeout/spacetrack/client"
-	"github.com/MrTimeout/spacetrack/data"
-	"github.com/MrTimeout/spacetrack/model"
-	"github.com/MrTimeout/spacetrack/utils"
+	l "github.com/MrTimeout/spacetrack/utils"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -34,11 +31,11 @@ import (
 var (
 	cfgFile  string
 	logFile  string
-	logLevel utils.LoggerLevel
+	logLevel l.LoggerLevel
 	console  bool
 )
 
-var config utils.Config
+var config l.Config
 
 // NewRootCmd represents the base command when called without any subcommands
 func NewRootCmd() *cobra.Command {
@@ -50,38 +47,6 @@ func NewRootCmd() *cobra.Command {
 		Long: `Fetch all the satellite data from www.space-track.org. 
 It uses the endpoint gp from the API REST exposed by the service.
 It can be used in an interval being limited by the requests allowed by the service.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			// TODO: We must remove this code...
-			path := client.SpaceRequest{
-				ShowEmptyResult: true,
-				Predicates: []model.Predicate{
-					{
-						Name:  "epoch",
-						Value: "<now-30",
-					},
-					{
-						Name:  "decay_date",
-						Value: "<>null-val",
-					},
-				},
-				Format: model.Json,
-				OrderBy: model.OrderBy{
-					By:   "norad_cat_id",
-					Sort: model.Asc,
-				},
-			}.BuildQuery()
-
-			rsp, err := client.FetchData(&config.Auth, path, true)
-			if err != nil {
-				cmd.PrintErrln(err)
-				return
-			}
-
-			if err = data.Persist(config.WorkDir, rsp); err != nil {
-				cmd.PrintErrln(err)
-				return
-			}
-		},
 		Example: `
 spacetrack --config $HOME/.spacetrack.yaml --interval 10m --log-file /tmp/spacetrack.json --log-level info --work-dir /tmp/spacetrack/
 
@@ -122,7 +87,7 @@ func Execute() error {
 }
 
 func initConfig() {
-	if cfgFile != "" && utils.FileExists(cfgFile) {
+	if cfgFile != "" && l.FileExists(cfgFile) {
 		viper.SetConfigFile(cfgFile)
 	} else {
 		home, err := os.UserHomeDir()
@@ -149,8 +114,8 @@ func initConfig() {
 func initPassphrase() {
 	var err error
 
-	if config.Auth.Secret, err = utils.ReadOnlyFilePassphrase(config.SecretFile); err != nil && !errors.Is(err, os.ErrNotExist) {
-		utils.Error("can't retrieve passphrase from file", zap.Error(err))
+	if config.Auth.Secret, err = l.ReadOnlyFilePassphrase(config.SecretFile); err != nil && !errors.Is(err, os.ErrNotExist) {
+		l.Error("can't retrieve passphrase from file", zap.Error(err))
 		os.Exit(1)
 	}
 }
@@ -158,7 +123,7 @@ func initPassphrase() {
 func updateConfig() {
 	viper.Unmarshal(&config) //nolint:errcheck
 	if strings.TrimSpace(logFile) != "" {
-		config.Logger = utils.NewLogger(console, logLevel, logFile)
+		config.Logger = l.NewLogger(console, logLevel, logFile)
 	}
-	utils.Configure(config.Logger)
+	l.Configure(config.Logger)
 }

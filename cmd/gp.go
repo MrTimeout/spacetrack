@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,7 +22,7 @@ import (
 	"github.com/MrTimeout/spacetrack/client"
 	"github.com/MrTimeout/spacetrack/data"
 	"github.com/MrTimeout/spacetrack/model"
-	"github.com/MrTimeout/spacetrack/utils"
+	l "github.com/MrTimeout/spacetrack/utils"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -50,16 +50,16 @@ response by a lot of fields.
 		Run: func(cmd *cobra.Command, args []string) {
 			now := time.Now()
 			defer func() {
-				utils.Info("time consumed from start of the application", zap.Duration("duration", time.Since(now)))
+				l.Info("time consumed from start of the application", zap.Duration("duration", time.Since(now)))
 			}()
 
 			query, err := buildQuery()
 			if err != nil {
-				utils.Error("buildQuery something bad occurs", zap.Error(err))
+				l.Error("buildQuery something bad occurs", zap.Error(err))
 			}
 
 			if err = executeQuery(query); err != nil {
-				utils.Error("executeQuery something bad occurs", zap.Error(err))
+				l.Error("executeQuery something bad occurs", zap.Error(err))
 			}
 		},
 		Example: `
@@ -130,14 +130,19 @@ func buildQuery() (string, error) {
 
 func executeQuery(query string) error {
 	if dryRun {
-		utils.Info("executing dry run", zap.String("query", query))
+		l.Info("executing dry run", zap.String("query", query))
 	} else {
 		rsp, err := client.FetchData(&config.Auth, query, true)
 		if err != nil {
 			return err
 		}
 
-		if err = data.Persist(config.WorkDir, rsp); err != nil {
+		p, err := data.GetPersister(data.OneFile, format)
+		if err != nil {
+			return err
+		}
+
+		if err = p.Persist(config.WorkDir, rsp); err != nil {
 			return err
 		}
 	}

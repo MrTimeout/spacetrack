@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/MrTimeout/spacetrack/utils"
+	l "github.com/MrTimeout/spacetrack/utils"
 	"go.uber.org/zap"
 )
 
@@ -36,19 +36,19 @@ var (
 )
 
 // FetchData get all the data from SpaceTrack using the query we have just built
-func FetchData(spaceTrackAuth *utils.SpaceTrackAuth, path string, retry bool) ([]SpaceOrbitalObj, error) {
+func FetchData(spaceTrackAuth *l.SpaceTrackAuth, path string, retry bool) ([]SpaceOrbitalObj, error) {
 	if err := auth(spaceTrackAuth, BASE_URL+LOGIN_ENDPOINT, postAuth); err != nil {
 		return nil, err
 	}
 
-	utils.Info("Successfully logged")
+	l.Info("Successfully logged")
 
 	url, err := buildURL()
 	if err != nil {
 		return nil, err
 	}
 
-	utils.Debug("Fetching GP data from space-track", zap.String("method", http.MethodGet), zap.String("url", url))
+	l.Debug("Fetching GP data from space-track", zap.String("method", http.MethodGet), zap.String("url", url+path))
 	req, err := http.NewRequest(http.MethodGet, url+path, nil)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func buildURL() (string, error) {
 	return BASE_URL + writer.String(), nil
 }
 
-func postAuth(sta *utils.SpaceTrackAuth) ResponseHandler {
+func postAuth(sta *l.SpaceTrackAuth) ResponseHandler {
 	return func(r *http.Response) error {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -115,7 +115,7 @@ func postAuth(sta *utils.SpaceTrackAuth) ResponseHandler {
 		}
 
 		if r.StatusCode != http.StatusOK {
-			utils.Warn("status code differ from usual successful code 200",
+			l.Warn("status code differ from usual successful code 200",
 				zap.Int("status", r.StatusCode),
 				zap.String("body", string(b)),
 			)
@@ -126,7 +126,7 @@ func postAuth(sta *utils.SpaceTrackAuth) ResponseHandler {
 			return ErrPersistingCookie
 		}
 
-		utils.Info("response from login space-track was ok")
+		l.Info("response from login space-track was ok")
 
 		return nil
 	}
