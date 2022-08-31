@@ -1,4 +1,5 @@
 bin
 resources
 Dockerfile.testing
-secret-file
+./secret-file
+./.vscode

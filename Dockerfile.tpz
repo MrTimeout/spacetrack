@@ -1,0 +1,25 @@
+# golang:alpine with version 3.16 (last alpine version also)
+FROM golang@sha256:c9a90742f5457fae80d8f9f1c9fc6acd6884c749dc6c5b11c22976973564dd4f as base
+
+RUN mkdir --parent /go/src/github.com/MrTimeout/spacetrack && \
+  apk add --no-cache --update ca-certificates tzdata git && update-ca-certificates
+
+WORKDIR /go/src/github.com/MrTimeout/spacetrack
+
+COPY . .
+
+RUN go mod download && go mod verify && \
+  CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-w -s" -o /go/bin ./...
+
+CMD [\
+  "/go/bin/spacetrack", "gp", "--log-level", "debug", \
+  "--log-file", "/tmp/spacetrack.json", \
+  "--work-dir", "/tmp/upload/basket1/products/automatic", \
+  "--config", "/root/.spacetrack.yaml", \
+  "--format", "json", \
+  "--limit", "5", \
+  "--filter", "decay_date<>null-val", \
+  "--filter", "epoch<now-30", \
+  "--orderby", "norad_cat_id", \
+  "--sort", "asc" \
+  ]

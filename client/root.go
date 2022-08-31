@@ -30,13 +30,18 @@ var (
 
 	// ErrPersistingCookie is thrown when there is an error when persisting the cookie due to a file problem, rights, etc.
 	ErrPersistingCookie = errors.New("trying to persist cookie")
+
+	// ErrAuthOperation is thrown when trying to authenticate to the service is not working property because of credentials or whatever.
+	ErrAuthOperation = errors.New("auth operation has failed")
 )
 
 // FetchData get all the data from SpaceTrack using the query we have just built
 func FetchData(spaceTrackAuth *utils.SpaceTrackAuth, path string, retry bool) ([]SpaceOrbitalObj, error) {
-	if auth(spaceTrackAuth, BASE_URL+LOGIN_ENDPOINT, postAuth) {
-		utils.Info("Successfully logged")
+	if err := auth(spaceTrackAuth, BASE_URL+LOGIN_ENDPOINT, postAuth); err != nil {
+		return nil, err
 	}
+
+	utils.Info("Successfully logged")
 
 	url, err := buildURL()
 	if err != nil {
@@ -114,7 +119,7 @@ func postAuth(sta *utils.SpaceTrackAuth) ResponseHandler {
 				zap.Int("status", r.StatusCode),
 				zap.String("body", string(b)),
 			)
-			return errors.New("response is not ok")
+			return ErrAuthOperation
 		}
 
 		if !sta.PersistCookie(r.Cookies()) {

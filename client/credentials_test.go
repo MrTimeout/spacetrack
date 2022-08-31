@@ -51,7 +51,7 @@ func TestAuth(t *testing.T) {
 			Secret:   "keysizeisnotcorrect",
 		}
 
-		assert.False(t, auth(&s, ts.URL, postAuth))
+		assert.ErrorIs(t, utils.ErrIncorrectSecret, auth(&s, ts.URL, postAuth))
 	})
 
 	t.Run("auth is not needed because cookie is still useful", func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestAuth(t *testing.T) {
 			Cookie: &http.Cookie{Name: "cookie", Value: "cookie-val", Expires: time.Now().Add(time.Hour)},
 		}
 
-		assert.True(t, auth(&s, ts.URL, postAuth))
+		assert.Nil(t, auth(&s, ts.URL, postAuth))
 	})
 
 	t.Run("request to server fails due to incorrect credentials", func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestAuth(t *testing.T) {
 			Password: "yyyy",
 		}
 
-		assert.False(t, auth(&s, ts.URL, postAuth))
+		assert.ErrorIs(t, ErrAuthOperation, auth(&s, ts.URL, postAuth))
 	})
 
 	t.Run("request successful but can't persist cookie", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestAuth(t *testing.T) {
 			Password: "yyy",
 		}
 
-		assert.False(t, auth(&s, ts.URL, postAuth))
+		assert.ErrorIs(t, ErrPersistingCookie, auth(&s, ts.URL, postAuth))
 	})
 
 	t.Run("request successful", func(t *testing.T) {
@@ -95,6 +95,6 @@ func TestAuth(t *testing.T) {
 			Password: "yyy",
 		}
 
-		assert.True(t, auth(&s, ts.URL, postAuth))
+		assert.Nil(t, auth(&s, ts.URL, postAuth))
 	})
 }
