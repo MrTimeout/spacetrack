@@ -17,92 +17,113 @@ package cmd
 
 import (
 	"errors"
+	"strings"
 
-	"github.com/MrTimeout/spacetrack/client"
 	"github.com/MrTimeout/spacetrack/utils"
 	"github.com/manifoldco/promptui"
 	"github.com/sethvargo/go-password/password"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var (
-	ErrCredentialsIdentity      = errors.New("trying to get credentials. Not parameter was specified and configuration wasn't updated")
-	ErrPasswordTooShort         = errors.New("trying to parse password. Its length is lower than 4")
+	// ErrCredentialsIdentity is thrown when no parameter and configuration wasn't specified
+	ErrCredentialsIdentity = errors.New("trying to get credentials. Not parameter was specified and configuration wasn't updated")
+	// ErrPasswordTooShort is thrown when password is not long enough
+	ErrPasswordTooShort = errors.New("trying to parse password. Its length is lower than 4")
+	// ErrPassphraseLengthMismatch is thrown when password is not 32 characters
 	ErrPassphraseLengthMismatch = errors.New("passphrase must be of 32 characters")
 
 	passphrase     string
 	autoPassphrase bool
 )
 
-var credentialsCmd = cobra.Command{
-	Use:   "credentials",
-	Short: "It will take up a file or raw credentials from input and generate an encrypted credentials",
-	Long: `It will take up a file or raw credentials from input and generate an encrypted credentials.
+func NewCredentialsCmd() *cobra.Command {
+	var credentialsCmd = &cobra.Command{
+		Use:   "credentials",
+		Short: "It will take up a file or raw credentials from input and generate an encrypted credentials",
+		Long: `It will take up a file or raw credentials from input and generate an encrypted credentials.
 	It is needed to insert a passphrase of 32 characters and store it to unencrypt later`,
-	Example: `
+		Example: `
 		spacetrack credentials --identity {identity} --password {password} --passphrase {passphrase}
 		spacetrack credentials --config config-file --passphrase {passphrase}
 		spacetrack credentials --identity {identity} // password and passphrase will be input in demand if not specified in cli arguments.
 	`,
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		var err error
-		if client.SpaceTrack.Identity == "" {
-			return ErrCredentialsIdentity
-		}
+		PreRunE: checkCredentialsErr,
+		Run:     setupCredentials,
+	}
 
-		if client.SpaceTrack.Password == "" {
-			if client.SpaceTrack.Password, err = promptForSensibleData("Password", passwordCheck); err != nil {
-				return err
-			}
-		}
-
-		if passphrase == "" && !autoPassphrase {
-			if passphrase, err = promptForSensibleData("Passphrase", passphraseCheck); err != nil {
-				return err
-			}
-		}
-
-		if passphrase == "" && autoPassphrase {
-			if passphrase, err = password.Generate(32, 10, 10, true, false); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		passphraseBytes := []byte(passphrase)
-		identity, err := utils.Encrypt([]byte(client.SpaceTrack.Identity), passphraseBytes)
-		if err != nil {
-			cmd.PrintErr("trying to generate the identity encrypted value")
-			return
-		}
-
-		password, err := utils.Encrypt([]byte(client.SpaceTrack.Password), passphraseBytes)
-		if err != nil {
-			cmd.PrintErr("trying to generate the password encrypted value")
-			return
-		}
-
-		viper.Set("identity", string(identity))
-		viper.Set("password", string(password))
-		if err := viper.WriteConfig(); err != nil {
-			cmd.PrintErr("writting config to file", viper.GetViper().ConfigFileUsed())
-			return
-		}
-
-		cmd.Printf("passphrase used to encrypt fields is: '%s'", passphrase)
-	},
-}
-
-func init() {
-	credentialsCmd.PersistentFlags().StringVar(&client.SpaceTrack.Identity, "identity", "", "identity of the credentials. It is the username or email")
-	credentialsCmd.PersistentFlags().StringVar(&client.SpaceTrack.Password, "password", "", "password of the credentials. It is the password of the account")
+	credentialsCmd.PersistentFlags().StringVar(&config.Auth.Identity, "identity", "", "identity of the credentials. It is the username or email")
+	credentialsCmd.PersistentFlags().StringVar(&config.Auth.Password, "password", "", "password of the credentials. It is the password of the account")
 	credentialsCmd.PersistentFlags().StringVar(&passphrase, "passphrase", "", "passphrase is nedeed to create the encrypted credentials. If not passed as argument, it will be prompted to be updated.")
 	credentialsCmd.PersistentFlags().BoolVar(&autoPassphrase, "auto-passphrase", false, "passphrase will be generated for you and printed in the cli, so you can store it for further actions.")
 
-	rootCmd.AddCommand(&credentialsCmd)
+	return credentialsCmd
+}
+
+func checkCredentialsErr(cmd *cobra.Command, args []string) error {
+	var err error
+	utils.Debug("checking identity of the user")
+	if config.Auth.Identity == "" {
+		return ErrCredentialsIdentity
+	}
+
+	utils.Debug("checking password of the user")
+	if config.Auth.Password == "" {
+		if config.Auth.Password, err = promptForSensibleData("Password", passwordCheck); err != nil {
+			return err
+		}
+	}
+
+	if passphrase == "" && !autoPassphrase {
+		if passphrase, err = promptForSensibleData("Passphrase", passphraseCheck); err != nil {
+			return err
+		}
+		utils.Info("using the already passed passphrase as a parameter")
+	}
+
+	if passphrase == "" && autoPassphrase {
+		utils.Info("generating a passphrase on demand")
+		if passphrase, err = password.Generate(32, 10, 10, true, false); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func setupCredentials(cmd *cobra.Command, args []string) {
+	passphraseBytes := []byte(passphrase)
+	identity, err := utils.Encrypt([]byte(config.Auth.Identity), passphraseBytes)
+	if err != nil {
+		utils.Error("trying to generate the identity encrypted value", zap.Error(err))
+		return
+	}
+
+	password, err := utils.Encrypt([]byte(config.Auth.Password), passphraseBytes)
+	if err != nil {
+		utils.Error("trying to generate the password encrypted value", zap.Error(err))
+		return
+	}
+
+	viper.Set("auth.identity", string(identity))
+	viper.Set("auth.password", string(password))
+	if err := viper.WriteConfig(); err != nil {
+		utils.Error("writting config to file",
+			zap.String("config_file", viper.GetViper().ConfigFileUsed()), zap.Error(err))
+		return
+	}
+
+	passphraseEncoded := utils.Encode(passphraseBytes)
+	utils.Info("passphrase used to encrypt fields was built successfully", zap.String("passphrase", string(passphraseEncoded)))
+	if autoPassphrase && strings.TrimSpace(config.SecretFile) != "" {
+		if err := utils.WritePassphraseToFile(config.SecretFile, passphraseEncoded); err != nil {
+			utils.Error("write passphrase to secret file was not successful", zap.Error(err))
+			return
+		}
+		utils.Info("passphrase successfully persisted into the secret file", zap.String("secret-file", config.SecretFile))
+	}
 }
 
 func promptForSensibleData(label string, validate func(s string) error) (string, error) {

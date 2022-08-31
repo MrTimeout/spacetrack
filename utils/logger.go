@@ -1,69 +1,47 @@
 package utils
 
 import (
-	"os"
-
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
-var Logger *zap.Logger
+var logger *zap.Logger
 
-func init() {
-	InitLogger("", LoggerLevel{value: "info"}, true)
+// Configure configures the zap logger from a Config structure
+func Configure(cfg Logger) {
+	logger = cfg.Tee()
 }
 
-func InitLogger(logFileName string, logLevel LoggerLevel, console bool) {
-	config := zap.NewProductionEncoderConfig()
-	config.EncodeTime = zapcore.ISO8601TimeEncoder
-
-	core := zapcore.NewTee(
-		createCoreForFile(config, logFileName, logLevel),
-		createCoreForConsole(config, logLevel, console),
-	)
-
-	Logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+// Debug will log a zap.Logger debug message
+func Debug(msg string, fields ...zap.Field) {
+	logger.Debug(msg, fields...)
 }
 
-func createCoreForFile(config zapcore.EncoderConfig, logFileName string, logLevel LoggerLevel) zapcore.Core {
-	if logFile, err := os.OpenFile(logFileName, os.O_CREATE|os.O_WRONLY, 0644); err == nil {
-		fileEncoder := zapcore.NewJSONEncoder(config)
-		writer := zapcore.AddSync(logFile)
-		return zapcore.NewCore(fileEncoder, writer, logLevel.Zap())
-	}
-
-	return zapcore.NewNopCore()
+// Info will log a zap.Logger info message
+func Info(msg string, fields ...zap.Field) {
+	logger.Info(msg, fields...)
 }
 
-func createCoreForConsole(config zapcore.EncoderConfig, logLevel LoggerLevel, console bool) zapcore.Core {
-	if console {
-		consoleEncoder := zapcore.NewConsoleEncoder(config)
-		return zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), logLevel.Zap())
-	}
-	return zapcore.NewNopCore()
+// Warn will log a zap.Logger warn message
+func Warn(msg string, fields ...zap.Field) {
+	logger.Warn(msg, fields...)
 }
 
-type LoggerLevel struct {
-	value string
+// Error will log a zap.Logger error message
+func Error(msg string, fields ...zap.Field) {
+	logger.Error(msg, fields...)
 }
 
-func (l *LoggerLevel) Zap() zapcore.Level {
-	level, _ := zapcore.ParseLevel(l.value)
-	return level
+// DPanic will log a zap.Logger dpanic message
+func DPanic(msg string, fields ...zap.Field) {
+	logger.DPanic(msg, fields...)
 }
 
-func (l *LoggerLevel) String() string {
-	return l.Zap().String()
+// Panic will log a zap.Logger panic message
+func Panic(msg string, fields ...zap.Field) {
+	logger.Panic(msg, fields...)
 }
 
-func (l *LoggerLevel) Set(level string) error {
-	zapLevel, err := zapcore.ParseLevel(level)
-	if err == nil {
-		l.value = zapLevel.String()
-	}
-	return err
-}
-
-func (l *LoggerLevel) Type() string {
-	return "string"
+// Fatal will log a zap.Logger fatal message
+func Fatal(msg string, fields ...zap.Field) {
+	logger.Fatal(msg, fields...)
 }

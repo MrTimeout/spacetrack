@@ -19,18 +19,20 @@ type Format string
 var FormatValues []string = []string{Json.String(), Xml.String(), Csv.String(), Html.String()}
 
 func (f Format) String() string {
+	var result = ""
+
 	switch f {
 	case Json:
-		return "json"
+		result = "json"
 	case Xml:
-		return "xml"
+		result = "xml"
 	case Csv:
-		return "csv"
+		result = "csv"
 	case Html:
-		return "html"
-	default:
-		return "json"
+		result = "html"
 	}
+
+	return result
 }
 
 func (f *Format) Type() string {

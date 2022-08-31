@@ -26,7 +26,7 @@ jobs:
       run: CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-w -s" ./...
 
     - name: Test
-      run: go test -race -covermode=atomic -coverprofile=coverage.out
+      run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
       
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

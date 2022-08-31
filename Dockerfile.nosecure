@@ -15,7 +15,7 @@ COPY . .
 RUN go mod download && go mod verify && \
   CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags="-w -s" -o /go/bin ./...
 
-FROM alpine@sha256:686d8c9dfa6f3ccfc8230bc3178d23f84eeaf7e457f36f271ab1acc53015037c as pre
+FROM alpine@sha256:686d8c9dfa6f3ccfc8230bc3178d23f84eeaf7e457f36f271ab1acc53015037c as nosecure
 
 COPY --from=base /usr/share/zoneinfo/ /usr/share/zoneinfo/
 COPY --from=base /etc/passwd /etc/passwd
@@ -25,13 +25,15 @@ COPY --from=base /home/spacetrack-client /home/spacetrack-client
 
 COPY --from=base /go/bin/spacetrack /go/bin/spacetrack
 
+VOLUME /tmp
+
 USER spacetrack-client:spacetrack-client
 
 CMD [\
   "/go/bin/spacetrack", "gp", "--log-level", "debug", \
   "--log-file", "/tmp/spacetrack.json", \
-  "--config", "/home/spacetrack-client/.spacetrack.yaml", \
   "--work-dir", "/tmp", \
+  "--config", "/home/spacetrack-client/.spacetrack.yaml", \
   "--limit", "5", \
   "--skip", "2", \
   "--format", "json", \

@@ -1,10 +1,30 @@
 # Space track script
+[![codecov](https://codecov.io/gh/MrTimeout/spacetrack/branch/master/graph/badge.svg?token=FP09KOGVN6)](https://codecov.io/gh/MrTimeout/spacetrack)
 
 This script is used to fetch data about man-made earth-orbiting object tracked by [www.space-track.org](https://www.space-track.org).
 
 ## Execute
 
 ### Docker
+
+#### No Secure
+
+This mode is used when we don't need/want to use a passphrase to encrypt our credentials.
+
+```sh
+> docker image build -f ./Dockerfile.nosecure -t spacetrack:latest -t spacetrack:0.0.1-SNAPSHOT --no-cache --target nosecure .
+> docker container run --name spacetrack \
+	--rm \
+	--detach \
+	-u spacetrack-client:spacetrack-client \
+	--mount "type=volume,source=spacetrack,target=/tmp" \
+	--mount "type=bind,source=$HOME/.spacetrack.yaml,target=/home/spacetrack-client/.spacetrack.yaml" \
+	spacetrack:latest
+```
+
+#### Secure
+
+This mode is used when we want to encrypt our credentials. We need to use an orchestrator, this example is from docker swarm. The orchestrator used, is up to you.
 
 ```sh
 > docker image build -f ./Dockerfile -t spacetrack:latest -t spacetrack:0.0.1-SNAPSHOT --no-cache --target pre .

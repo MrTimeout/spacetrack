@@ -17,14 +17,16 @@ const (
 var SortValues = []string{Asc.String(), Desc.String()}
 
 func (s Sort) String() string {
+	var result = ""
+
 	switch s {
 	case Asc:
-		return "asc"
+		result = "asc"
 	case Desc:
-		return "desc"
-	default:
-		return ""
+		result = "desc"
 	}
+
+	return result
 }
 
 func (s *Sort) Type() string {

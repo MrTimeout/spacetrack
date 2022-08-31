@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -50,5 +51,38 @@ func TestDecrypt(t *testing.T) {
 		want := "crypto/aes: invalid key size 5"
 
 		assert.EqualError(t, got, want)
+	})
+}
+
+func TestReadOnlyFilePassphrase(t *testing.T) {
+	t.Run("read only file passphrase when file doesn't exist", func(t *testing.T) {
+		_, got := ReadOnlyFilePassphrase("./notexistentfile")
+
+		assert.ErrorContains(t, got, "no such file or directory")
+	})
+
+	t.Run("read only file passphrase with passphrase length different than 32", func(t *testing.T) {
+		f := createTmpWithPerm(t, 0666)
+		if _, err := f.Write(Encode([]byte("random data"))); err != nil {
+			t.Fatal(err)
+		}
+
+		_, got := ReadOnlyFilePassphrase(f.Name())
+
+		assert.ErrorIs(t, ErrCipherTextTooShort, got)
+	})
+
+	t.Run("read only file passphrase correctly", func(t *testing.T) {
+		f := createTmpWithPerm(t, 0666)
+		if _, err := f.Write(Encode([]byte(strings.Repeat("a", 32)))); err != nil {
+			t.Fatal(err)
+		}
+
+		passphrase, err := ReadOnlyFilePassphrase(f.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.Equal(t, strings.Repeat("a", 32), passphrase)
 	})
 }
