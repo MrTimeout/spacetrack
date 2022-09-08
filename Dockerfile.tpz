@@ -16,7 +16,7 @@ CMD [\
   "--log-file", "/tmp/spacetrack.json", \
   "--work-dir", "/tmp/upload/basket1/products/automatic", \
   "--config", "/root/.spacetrack.yaml", \
-  "--format", "json", \
+  "--format", "xml", \
   "--limit", "5", \
   "--filter", "decay_date<>null-val", \
   "--filter", "epoch<now-30", \
