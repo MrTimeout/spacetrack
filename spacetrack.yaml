@@ -12,3 +12,4 @@ logger:
           level: debug
     prod: false
 work_dir: /tmp/spacetrack
+

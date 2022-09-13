@@ -38,7 +38,7 @@ func (w WriterImpl) Write(file string, input any) error {
 
 	l.Info("writing to file", zap.String("file_name", file), zap.Int("content_size", len(b)))
 
-	if err := os.WriteFile(file, b, 0644); err != nil {
+	if err := os.WriteFile(file, b, 0666); err != nil {
 		return err
 	}
 
