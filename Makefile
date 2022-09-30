@@ -1,16 +1,6 @@
 build:
-	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o ./bin -ldflags="-w -s" ./...
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./go-spacetrack ./...
 
-build-local:
-	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o ${GOPATH}/bin -ldflags="-w -s" ./...
-
-clean:
-	@rm ./bin/spacetrack*
-
-docker_tpz:
-	@docker image build --file ./Dockerfile.tpz --tag spacetrack:tpz --no-cache .
-	@docker container rm -f spacetrack-tpz
-	@docker container run --name spacetrack-tpz --detach -v spacetrack:/tmp/upload -v ${PWD}/spacetrack.yaml:/root/.spacetrack.yaml spacetrack:tpz
-
-install:
-	GOARCH=amd64 GOOS=linux go install ./...
+debug:
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -o ./go-spacetrack -gcflags="all=-N -l" ./...
+	@dlv --listen=:2345 --headless=true --api-version=2 exec ./go-spacetrack -- --config-file /tmp/spacetrack.yml

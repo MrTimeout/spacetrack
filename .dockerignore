@@ -1,9 +1,4 @@
-*.md
-LICENSE
-.gitignore
-bin
 .vscode
-resources
+spacetrack.yml
 Makefile
-.golangci.yml
-.pre-commit-config.yaml
+*.md
