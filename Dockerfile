@@ -20,9 +20,4 @@ RUN go mod download && go mod verify && \
 
 USER "${USER}"
 
-CMD [\
-  "/go/bin/go-spacetrack", \
-  "--work-dir", "/tmp/upload/basket1/products/automatic", \
-  "--format", "xml", \
-  "--rest-call", "all", \
-]
+CMD ["/go/bin/go-spacetrack", "--work-dir", "/tmp/upload/basket1/products/automatic", "--format", "xml", "--rest-call", "all"]

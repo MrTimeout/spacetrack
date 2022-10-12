@@ -32,7 +32,7 @@ We can also append our repository and username in that repository. In my case, I
   estenoesmiputonombre/spacetrack:0.3
 ```
 
-We can also modify son options at runtime
+We can also modify some options at runtime
 
 ```sh
 > docker container run --name spacetrack-client --detach \
