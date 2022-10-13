@@ -38,7 +38,7 @@ sleep 5s
 ID=$(docker container run --rm -itd --volume ingestion_ingsftpvolume:/tmp/upload alpine:latest /bin/sh)
 
 docker container exec -it ${ID} /bin/sh -c "ls -al /tmp/upload/basket1/products/automatic"
-echo "Execute the following command if you want to attach to the script process: \"docker container exec --workdir /tmp/upload/basket1/products/automatic -it ${ID}\""
+echo "Execute the following command if you want to attach to the script process: \n\"docker container exec --workdir /tmp/upload/basket1/products/automatic -it ${ID}\""
 
 ## Copy the file to the current fs
 # docker container cp ccc:/tmp/upload/basket1/products/automatic/herethefile ./herethefile
