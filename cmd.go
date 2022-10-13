@@ -23,15 +23,15 @@ const (
 	configFileName = "spacetrack"
 )
 
-var restCalls = map[RestCall]func(context.Context) error{
-	Tle: func(ctx context.Context) error {
-		return exec[SpaceTrackTleUnit](ctx, tleUrl, filepath.Join(cfg.WorkDir, "spacetrack-tle", strconv.FormatInt(time.Now().Unix(), 10)))
+var restCalls = map[RestCall]func(context.Context, string) error{
+	Tle: func(ctx context.Context, folder string) error {
+		return exec[SpaceTrackTleUnit](ctx, tleUrl, filepath.Join(cfg.WorkDir, "spacetrack-tle", folder))
 	},
-	Cdm: func(ctx context.Context) error {
-		return exec[SpaceTrackCdmUnit](ctx, cdmUrl, filepath.Join(cfg.WorkDir, "spacetrack-cdm", strconv.FormatInt(time.Now().Unix(), 10)))
+	Cdm: func(ctx context.Context, folder string) error {
+		return exec[SpaceTrackCdmUnit](ctx, cdmUrl, filepath.Join(cfg.WorkDir, "spacetrack-cdm", folder))
 	},
-	Decay: func(ctx context.Context) error {
-		return exec[SpaceTrackDecayUnit](ctx, decayUrl, filepath.Join(cfg.WorkDir, "spacetrack-dec", strconv.FormatInt(time.Now().Unix(), 10)))
+	Decay: func(ctx context.Context, folder string) error {
+		return exec[SpaceTrackDecayUnit](ctx, decayUrl, filepath.Join(cfg.WorkDir, "spacetrack-dec", folder))
 	},
 }
 
@@ -54,6 +54,10 @@ func newRootCmd() *cobra.Command {
 		Short: "script to fetch data from spacetrack",
 		Long:  "script to fetch data from spacetrack",
 		Run: func(cmd *cobra.Command, args []string) {
+      if configFile != "" {
+        readConfig()
+      }
+
 			if cfg.Format == "" {
 				cfg.Format = Json
 			}
@@ -70,23 +74,25 @@ func newRootCmd() *cobra.Command {
 				panic(err)
 			}
 
+      folder := strconv.FormatInt(time.Now().Unix(), 10)
+
 			if v, ok := restCalls[cfg.RestCall]; ok {
 				Info("executing rest call", zap.String("rest_call", cfg.RestCall.String()))
-				if err := v(ctx); err != nil {
+				if err := v(ctx, folder); err != nil {
 					Warn("space-track "+cfg.RestCall.String()+" fetch", zap.Error(err))
 				}
 			} else {
 				Info("executing rest call", zap.String("rest_call", cfg.RestCall.String()))
 
-				if err := restCalls[Tle](ctx); err != nil {
+				if err := restCalls[Tle](ctx, folder); err != nil {
 					Warn("space-track tle fetch", zap.Error(err))
 				}
 
-				if err := restCalls[Decay](ctx); err != nil {
+				if err := restCalls[Decay](ctx, folder); err != nil {
 					Warn("space-track decay fetch", zap.Error(err))
 				}
 
-				if err := restCalls[Cdm](ctx); err != nil {
+				if err := restCalls[Cdm](ctx, folder); err != nil {
 					Warn("space-track cdm fetch", zap.Error(err))
 				}
 
@@ -189,11 +195,7 @@ func execute() error {
 	err := root.Execute()
 	if err != nil {
 		return err
-	}
-
-	if configFile != "" {
-		return readConfig()
-	}
+	}	
 
 	return nil
 }
