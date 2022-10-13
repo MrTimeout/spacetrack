@@ -81,7 +81,7 @@ func strRes(res *http.Response, body string) string {
 		return "error reading response"
 	}
 
-	return fmt.Sprintf("\n%s %s\n\n", res.Status, res.Proto) + strHeaders(res.Header)
+	return fmt.Sprintf("\n%s %s\n\n", res.Status, res.Proto) + strHeaders(res.Header) + body
 }
 
 func strReq(r *http.Request, body string) string {
